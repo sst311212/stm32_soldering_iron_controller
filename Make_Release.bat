@@ -14,7 +14,7 @@ if not exist %ZIP% (
 
 :: Compile all profiles
 echo Compiling...
-start /w Building_script.bat 10
+CALL Building_script.bat 4
 IF %ERRORLEVEL% NEQ 0 echo Build error! && GOTO :ERROR
 echo OK
 echo.
@@ -24,24 +24,10 @@ md Release 2>nul
 cd Release
 del *.zip *.bin *.list 2>nul >nul
 
-copy "..\BOARDS\KSGER\v1.5\STM32F103\SSD1306.bin"	"KSGER_v1_5_OLED.bin" >nul			&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
-copy "..\BOARDS\KSGER\v1.5\STM32F103\SSD1306.list"	"KSGER_v1_5_OLED.list" >nul			&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
-copy "..\BOARDS\KSGER\v1.5\STM32F103\ST7565.bin" 	"KSGER_v1_5_LCD_ST7565.bin" >nul		&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
-copy "..\BOARDS\KSGER\v1.5\STM32F103\ST7565.list" 	"KSGER_v1_5_LCD_ST7565.list" >nul		&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
-copy "..\BOARDS\KSGER\v2\STM32F101\SSD1306.bin" 	"KSGER_v2_OLED.bin" >nul			&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
-copy "..\BOARDS\KSGER\v2\STM32F101\SSD1306.list" 	"KSGER_v2_OLED.list" >nul			&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
-copy "..\BOARDS\KSGER\v3\STM32F101\SSD1306.bin" 	"KSGER_v3_OLED.bin" >nul			&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
-copy "..\BOARDS\KSGER\v3\STM32F101\SSD1306.list" 	"KSGER_v3_OLED.list" >nul			&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
-copy "..\BOARDS\KSGER\v3\STM32F101\ST7565.bin" 		"KSGER_v3_LCD_ST7565.bin" >nul			&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
-copy "..\BOARDS\KSGER\v3\STM32F101\ST7565.list" 	"KSGER_v3_LCD_ST7565.list" >nul			&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
-copy "..\BOARDS\Quicko\STM32F072\SSD1306.bin" 		"Quicko_STM32F072_OLED.bin" >nul		&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
-copy "..\BOARDS\Quicko\STM32F072\SSD1306.list" 		"Quicko_STM32F072_OLED.list" >nul		&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
-copy "..\BOARDS\Quicko\STM32F072\ST7565.bin" 		"Quicko_STM32F072_LCD_ST7565.bin" >nul		&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
-copy "..\BOARDS\Quicko\STM32F072\ST7565.list" 		"Quicko_STM32F072_LCD_ST7565.list" >nul		&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
-copy "..\BOARDS\Quicko\STM32F103\SSD1306.bin" 		"Quicko_STM32F103_OLED.bin" >nul		&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
-copy "..\BOARDS\Quicko\STM32F103\SSD1306.list" 		"Quicko_STM32F103_OLED.list" >nul		&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
-copy "..\BOARDS\Quicko\STM32F103\ST7565.bin" 		"Quicko_STM32F103_LCD_ST7565.bin" >nul		&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
-copy "..\BOARDS\Quicko\STM32F103\ST7565.list" 		"Quicko_STM32F103_LCD_ST7565.list" >nul		&& IF %ERRORLEVEL% NEQ 0 GOTO :NO_FILES
+for /f "usebackq delims=" %%i in (`git rev-parse --short HEAD`) do set commitHash=%%i
+CALL :COPYBIN "DXCHMEI_2020" "SSD1306"
+CALL :COPYBIN "KSGER_GX_V2.1S" "SSD1306"
+CALL :COPYBIN "XinYue_JBC_V2.1S" "SSD1306"
 
 echo Creating zip files...
 echo.
@@ -52,6 +38,17 @@ for %%f in (*.bin) do (
 )
 goto :DONE
 
+:: COPYBIN BOARDNAME SCREENTYPE
+:COPYBIN
+if exist "..\BOARDS\Custom\%~1\%~2.bin" (
+  copy "..\BOARDS\Custom\%~1\%~2.bin"   "%~1_%commitHash%.bin"   >nul
+  copy "..\BOARDS\Custom\%~1\%~2.list"  "%~1_%commitHash%.list"  >nul
+  if exist "..\BOARDS\Custom\%~1\Docs\BackupTips.json" (
+    python "..\backupTipTool.py" save -c "..\BOARDS\Custom\%~1\Docs\BackupTips.json" "%~1_%commitHash%.bin"
+  )
+)
+exit /b
+
 :ZIP
 echo %FILE%
 %ZIP% a -mx=9 -tzip %FILE%.zip %FILE%.* -y >nul
@@ -59,18 +56,12 @@ echo %FILE%
 IF %ERRORLEVEL% NEQ 0 echo Unknown 7-ZIP Error! && GOTO :ERROR
 exit /B
 
-
 :DONE
 echo.
 echo OK
 echo Files placed in "Release" folder
 TIMEOUT 3 >NUL
 GOTO :END
-
-
-:NO_FILES
-echo Missing bin files!
-echo First run Building_script.bat and select "Compile all"
 
 :ERROR
 pause

@@ -76,15 +76,15 @@ if __name__ == "__main__":
         muxBDFMapFile(r"..\bdf\font_small.bdf", r"temp\font_smol_chi.bdf", r"temp\font_smol_all.bdf")
 
         # Generate C language font source
-        uni_mapset = "32-126,160-255,268-271,282-283,286,287,304,305,327,328,344,345,350-353,356,357,366,367,381,382,937,1040-1103,5000-65535"
+        uni_mapset = "32-126,160-255,937,5000-65535"
         exec_command([r"..\bdfconv\bdfconv.exe", "-v", "-b", "0", "-f", "1", "-m", uni_mapset, "-o", r"temp\font_menu.c", "-n", "u8g2_font_menu", r"temp\font_menu_all.bdf"])
         exec_command([r"..\bdfconv\bdfconv.exe", "-v", "-b", "0", "-f", "1", "-m", uni_mapset, "-o", r"temp\font_smol.c", "-n", "u8g2_font_small", r"temp\font_smol_all.bdf"])
         exec_command([r"..\bdfconv\bdfconv.exe", "-v", "-b", "0", "-f", "1", "-m", "45,48-57,67,70,176", "-o", r"temp\font_iron_temp.c", "-n", "u8g2_font_iron_temp", r"..\bdf\ITC Avant Garde Gothic Medium_31.bdf"])
 
         # Patch incorrect font height
-        replaceFileString(r"temp\font_iron_temp.c", "\\42\\", "\\45\\")
-        replaceFileString(r"temp\font_menu.c", "\\21\\", "\\17\\")
-        replaceFileString(r"temp\font_smol.c", "\\16\\", "\\12\\")
+        replaceFileString(r"temp\font_iron_temp.c", "\\42\\0", "\\45\\0")
+        replaceFileString(r"temp\font_menu.c", "\\20\\0", "\\17\\0")
+        replaceFileString(r"temp\font_smol.c", "\\16\\0", "\\12\\0")
 
         # Combine all font sources into one file
         exec_command(["copy", "/b", r"temp\font_iron_temp.c", "+", r"temp\font_menu.c", "+", r"temp\font_smol.c", "u8g2_aio.c"])
