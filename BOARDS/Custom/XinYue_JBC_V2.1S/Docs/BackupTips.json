@@ -1,0 +1,32 @@
+[
+    {
+      "profile": 0,
+      "tipname": "T12-BCF2",
+      "cal_250": 1769,
+      "cal_400": 2743
+    },
+    {
+      "profile": 0,
+      "tipname": "T12-D24Z",
+      "cal_250": 1902,
+      "cal_400": 2784
+    },
+    {
+      "profile": 0,
+      "tipname": "T12-JL02",
+      "cal_250": 1897,
+      "cal_400": 2935
+    },
+    {
+      "profile": 0,
+      "tipname": "T12-KRZ",
+      "cal_250": 1863,
+      "cal_400": 2791
+    },
+    {
+      "profile": 1,
+      "tipname": "C245-911",
+      "cal_250": 2093,
+      "cal_400": 3314
+    }
+  ]
