@@ -1,0 +1,1 @@
+../../../KSGER/v1.5/STM32F103/Core/Startup/startup_stm32f103c8tx.s

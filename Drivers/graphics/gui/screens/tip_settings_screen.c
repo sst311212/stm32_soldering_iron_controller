@@ -168,8 +168,12 @@ static int tip_delete(widget_t *w, RE_Rotation_t input) {
 }
 //=========================================================
 static int tip_copy(widget_t *w, RE_Rotation_t input) {
+  uint8_t previousTip = Selected_Tip;
+  uint8_t tipNameLength = strlen(systemSettings.Profile.tip[previousTip].name);
   Selected_Tip = systemSettings.Profile.currentNumberOfTips;                                                    // Select next available slot
   strcpy(backupTip.name, _BLANK_TIP);                                                                           // Copy empty name (But keep the settings from the tip we're copying from)
+  memcpy(backupTip.name, systemSettings.Profile.tip[previousTip].name, tipNameLength);
+  backupTip.name[(tipNameLength < TIP_LEN ? tipNameLength : TIP_LEN - 1)] = '*';
   comboitem_tip_settings_save->enabled=0;                                                                       // Disable save, will be enabled when the name is modified
   comboitem_tip_settings_copy->enabled=0;                                                                       // Cannot copy a new tip
   comboitem_tip_settings_delete->enabled=0;                                                                     // Cannot delete a new tip

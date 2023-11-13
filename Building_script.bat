@@ -1,7 +1,7 @@
 @echo off
 
 :: [Default search path] Installation folder must be named STM32CubeIDE!
-SET SEARCH_PATH="C:\ST"
+SET SEARCH_PATH="C:\Program Files (x86)\ST"
 
 
 
@@ -13,11 +13,8 @@ SET SEARCH_PATH="C:\ST"
 :: set JAVA_CMD="java.exe"
 
 
-SET MODELS=    "BOARDS\KSGER\v1.5\STM32F103";^
-               "BOARDS\Quicko\STM32F103";^
-               "BOARDS\KSGER\v2\STM32F101";^
-               "BOARDS\KSGER\v3\STM32F101";^
-               "BOARDS\Quicko\STM32F072"
+SET MODELS=    "BOARDS\DXCHMEI";^
+               "BOARDS\XinYue"
 SET RUN_CUBEMX="n"
 SET COMPILE="n"
 cls
@@ -26,31 +23,17 @@ echo     STM32 Soldering firmware automated builder.
 echo.
 echo     KEY   PROFILE        DISPLAY
 echo.
-echo     [1]   KSGER v1.5     OLED
-echo     [2]   KSGER v1.5     LCD
-echo     [3]   KSGER v2       OLED
-echo     [4]   KSGER v3       OLED
-echo     [5]   KSGER v3       LCD
-echo     [6]   Quicko 072     OLED
-echo     [7]   Quicko 072     LCD
-echo     [8]   Quicko 103     OLED
-echo     [9]   Quicko 103     LCD
+echo     [1]   DXCHMEI        OLED
+echo     [2]   XinYue         OLED
 echo     [A]   Build all
 echo     [Q]   Quit
 echo.
-CHOICE /C 123456789AQ /N /M "Please select your building target:"
+CHOICE /C 12AQ /N /M "Please select your building target:"
 cls
-IF "%ERRORLEVEL%"=="1" SET PROFILE="BOARDS\KSGER\v1.5\STM32F103" && SET DISPLAY="SSD1306"&& GOTO :ASKCUBEMX
-IF "%ERRORLEVEL%"=="2" SET PROFILE="BOARDS\KSGER\v1.5\STM32F103" && SET DISPLAY="ST7565"&& GOTO :ASKCUBEMX
-IF "%ERRORLEVEL%"=="3" SET PROFILE="BOARDS\KSGER\v2\STM32F101" && SET DISPLAY="SSD1306"&& GOTO :ASKCUBEMX
-IF "%ERRORLEVEL%"=="4" SET PROFILE="BOARDS\KSGER\v3\STM32F101" && SET DISPLAY="SSD1306"&& GOTO :ASKCUBEMX
-IF "%ERRORLEVEL%"=="5" SET PROFILE="BOARDS\KSGER\v3\STM32F101" && SET DISPLAY="ST7565"&& GOTO :ASKCUBEMX
-IF "%ERRORLEVEL%"=="6" SET PROFILE="BOARDS\Quicko\STM32F072" && SET DISPLAY="SSD1306"&& GOTO :ASKCUBEMX
-IF "%ERRORLEVEL%"=="7" SET PROFILE="BOARDS\Quicko\STM32F072" && SET DISPLAY="ST7565"&& GOTO :ASKCUBEMX
-IF "%ERRORLEVEL%"=="8" SET PROFILE="BOARDS\Quicko\STM32F103" && SET DISPLAY="SSD1306"&& GOTO :ASKCUBEMX
-IF "%ERRORLEVEL%"=="9" SET PROFILE="BOARDS\Quicko\STM32F103" && SET DISPLAY="ST7565"&& GOTO :ASKCUBEMX
-IF "%ERRORLEVEL%"=="10" SET PROFILE="" && SET RUN_CUBEMX="y" && SET COMPILE="y" && SET DISPLAY=""&& GOTO :TOOLS
-IF "%ERRORLEVEL%"=="11" GOTO :EXIT
+IF "%ERRORLEVEL%"=="1" SET PROFILE="BOARDS\DXCHMEI" && SET DISPLAY="SSD1306"&& GOTO :ASKCUBEMX
+IF "%ERRORLEVEL%"=="2" SET PROFILE="BOARDS\XinYue" && SET DISPLAY="SSD1306"&& GOTO :ASKCUBEMX
+IF "%ERRORLEVEL%"=="3" SET PROFILE="" && SET RUN_CUBEMX="y" && SET COMPILE="y" && SET DISPLAY=""&& GOTO :TOOLS
+IF "%ERRORLEVEL%"=="4" GOTO :EXIT
 
 :ASKCUBEMX
 echo.
@@ -139,7 +122,7 @@ IF %RUN_CUBEMX%=="n" ( EXIT /B )
 copy /Y STM32SolderingStation.ioc STM32SolderingStation.bak >nul
 
 echo [94mRunning CubeMX...[0m
-start /w /min "CubeMX" %JAVA_CMD% -jar "%MX%" -q cubemx_script >nul
+start /w /min "CubeMX" "%JAVA_CMD%" -jar "%MX%" -q cubemx_script >nul
 IF %ERRORLEVEL% NEQ 0 (
   echo [91mCubeMX error![0m : %ERRORLEVEL%
   goto :DONE
@@ -155,7 +138,7 @@ IF %DISPLAY%=="" (
 )
 echo [94mCompiling...[0m    DISPLAY:%DISP:"=%
 echo start /w /min "CubeIDE" %IDE% --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -import %cd% -build STM32SolderingStation/%DISP:"=%_Release 2>nul >nul
-start /w /min "CubeIDE" %IDE% --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -import %cd% -build STM32SolderingStation/%DISP:"=%_Release 2>nul >nul
+start /w /min "CubeIDE" "%IDE%" --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -import %cd% -build STM32SolderingStation/%DISP:"=%_Release 2>nul >nul
 IF %ERRORLEVEL% NEQ 0 (
   echo [91mCompiler error![0m : %ERRORLEVEL%
   goto :DONE
