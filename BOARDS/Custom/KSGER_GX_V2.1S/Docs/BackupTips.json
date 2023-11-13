@@ -1,0 +1,50 @@
+[
+    {
+      "profile": 1,
+      "tipname": "200H-912",
+      "cal_250": 2054,
+      "cal_400": 3279
+    },
+    {
+      "profile": 1,
+      "tipname": "200H-939",
+      "cal_250": 1996,
+      "cal_400": 3248
+    },
+    {
+      "profile": 1,
+      "tipname": "C245-911",
+      "cal_250": 2035,
+      "cal_400": 3306
+    },
+    {
+      "profile": 1,
+      "tipname": "GEEB-908",
+      "cal_250": 1974,
+      "cal_400": 3266
+    },
+    {
+      "profile": 1,
+      "tipname": "GEEB-966",
+      "cal_250": 2014,
+      "cal_400": 3298
+    },
+    {
+      "profile": 1,
+      "tipname": "I2C-029",
+      "cal_250": 2171,
+      "cal_400": 3574
+    },
+    {
+      "profile": 1,
+      "tipname": "I2C-939",
+      "cal_250": 2121,
+      "cal_400": 3432
+    },
+    {
+      "profile": 1,
+      "tipname": "L245-25K",
+      "cal_250": 2007,
+      "cal_400": 3277
+    }
+  ]

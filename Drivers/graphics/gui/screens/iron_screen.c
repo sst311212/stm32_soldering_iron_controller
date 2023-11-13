@@ -259,10 +259,10 @@ static void setNoIronADC(uint32_t *val) {
 }
 //=========================================================
 static void setBoostTime(uint32_t *val) {
-  getProfileSettings()->boostTimeout= *val*60000;
+  getProfileSettings()->boostTimeout= *val*1000;
 }
 static void * getBoostTime() {
-  temp = getProfileSettings()->boostTimeout/60000;
+  temp = getProfileSettings()->boostTimeout/1000;
   return &temp;
 }
 //=========================================================
@@ -703,13 +703,13 @@ static void iron_create(screen_t *scr){
   //
   newComboEditable(w, strings[lang].IRON_Boost, &edit, NULL);
   dis=&edit->inputData;
-  dis->endString="min";
+  dis->endString="s";
   dis->reservedChars=5;
   dis->getData = &getBoostTime;
-  edit->big_step = 10;
-  edit->step = 1;
-  edit->max_value = 60;
-  edit->min_value = 1;
+  edit->big_step = 30;
+  edit->step = 5;
+  edit->max_value = 600;
+  edit->min_value = 30;
   edit->setData = (setterFn)&setBoostTime;
 
   //  [ Boost Temp Widget ]
@@ -767,7 +767,7 @@ static void iron_create(screen_t *scr){
   dis->reservedChars=4;
   dis->getData = &getStandDelay;
   edit->big_step = 10;
-  edit->step = 5;
+  edit->step = 1;
   edit->setData = (setterFn)&setStandDelay;
   edit->max_value = 240;
   edit->min_value = 0;
