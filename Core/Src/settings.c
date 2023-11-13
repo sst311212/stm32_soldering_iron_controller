@@ -26,7 +26,7 @@ const settings_t defaultSettings = {
   .contrastOrBrightness = 255,
 #endif
   .dim_mode             = dim_always,
-  .dim_Timeout          = 10000,                // ms
+  .dim_Timeout          = 5000,                 // ms
   .dim_inSleep          = enable,
   .displayStartColumn   = DISPLAY_START_COLUMN,
   .displayStartLine     = DISPLAY_START_LINE,
@@ -41,7 +41,7 @@ const settings_t defaultSettings = {
   .displayResRatio      = 5,                    // For ST7565 only
 #endif
   .guiUpdateDelay       = 200,                  // ms
-  .guiTempDenoise       = 5,                    // ±5°C
+  .guiTempDenoise       = 2,                    // ±5°C
   .tempUnit             = mode_Celsius,
   .tempStep             = 5,                    // 5º steps
   .tempBigStep          = 20,                   // 20º big steps
@@ -51,11 +51,11 @@ const settings_t defaultSettings = {
   .bootProfile          = profile_None,
   .initMode             = mode_sleep,           // Safer to boot in sleep mode by default!
   .buzzerMode           = disable,
-  .buttonWakeMode       = wake_all,
-  .shakeWakeMode        = wake_all,
+  .buttonWakeMode       = wake_sleep,
+  .shakeWakeMode        = wake_standby,
   .EncoderMode          = RE_Mode_Forward,
   .debugEnabled         = disable,
-  .language             = lang_english,
+  .language             = lang_tchinese,
   .clone_fix            = disable,
 };
 
@@ -568,14 +568,16 @@ void loadSettingsFromBackupRam(void)
     bkpRamData.values.lastProfile = systemSettings.settings.bootProfile;
     writeBackupRam();
 
-    Oled_error_init();
-    putStrAligned("New/low batt?", 0, align_center);
-    putStrAligned("Forgot last", 16, align_center);
-    putStrAligned("used settings.", 32, align_center);
-    putStrAligned("Restored dflt.", 48, align_left);
-    update_display();
-    ErrCountDown(3,117,50);
-    NVIC_SystemReset();
+    bkpRamData.values.lastSelTip[systemSettings.currentProfile] = systemSettings.currentTip;
+    bkpRamData.values.lastTipTemp[systemSettings.currentProfile] = getUserTemperature();
+    // Oled_error_init();
+    // putStrAligned("New/low batt?", 0, align_center);
+    // putStrAligned("Forgot last", 16, align_center);
+    // putStrAligned("used settings.", 32, align_center);
+    // putStrAligned("Restored dflt.", 48, align_left);
+    // update_display();
+    // ErrCountDown(3,117,50);
+    // NVIC_SystemReset();
   }
 }
 
@@ -728,14 +730,14 @@ static void resetCurrentProfile(void){
     for(uint8_t x = 0; x < NUM_TIPS; x++) {
       systemSettings.Profile.tip[x].calADC_At_250   = T12_Cal250;
       systemSettings.Profile.tip[x].calADC_At_400   = T12_Cal400;     // These values are way lower, but better to be safe than sorry
-      systemSettings.Profile.tip[x].PID.Kp          = 4000;           // val = /1.000.000
-      systemSettings.Profile.tip[x].PID.Ki          = 5500;           // val = /1.000.000
-      systemSettings.Profile.tip[x].PID.Kd          = 700;           // val = /1.000.000
-      systemSettings.Profile.tip[x].PID.maxI        = 70;             // val = /100
+      systemSettings.Profile.tip[x].PID.Kp          = 5000;           // val = /1.000.000
+      systemSettings.Profile.tip[x].PID.Ki          = 2500;           // val = /1.000.000
+      systemSettings.Profile.tip[x].PID.Kd          = 2000;           // val = /1.000.000
+      systemSettings.Profile.tip[x].PID.maxI        = 85;             // val = /100
       systemSettings.Profile.tip[x].PID.minI        = 0;              // val = /100
       strcpy(systemSettings.Profile.tip[x].name, _BLANK_TIP);         // Empty name
     }
-    strcpy(systemSettings.Profile.tip[0].name, "T12-BC3");               // Put some generic name.
+    strcpy(systemSettings.Profile.tip[0].name, "T12-K");              // Put some generic name.
     systemSettings.Profile.currentNumberOfTips      = 1;
     systemSettings.Profile.defaultTip               = 0;
     systemSettings.Profile.impedance                = 80;             // 8.0 Ohms
@@ -750,18 +752,18 @@ static void resetCurrentProfile(void){
     for(uint8_t x = 0; x < NUM_TIPS; x++) {
       systemSettings.Profile.tip[x].calADC_At_250   = C245_Cal250;
       systemSettings.Profile.tip[x].calADC_At_400   = C245_Cal400;
-      systemSettings.Profile.tip[x].PID.Kp          = 4000;           // val = /1.000.000
-      systemSettings.Profile.tip[x].PID.Ki          = 5500;           // val = /1.000.000
-      systemSettings.Profile.tip[x].PID.Kd          = 700;           // val = /1.000.000
+      systemSettings.Profile.tip[x].PID.Kp          = 5000;           // val = /1.000.000
+      systemSettings.Profile.tip[x].PID.Ki          = 2500;           // val = /1.000.000
+      systemSettings.Profile.tip[x].PID.Kd          = 2000;           // val = /1.000.000
       systemSettings.Profile.tip[x].PID.maxI        = 70;             // val = /100
       systemSettings.Profile.tip[x].PID.minI        = 0;
       strcpy(systemSettings.Profile.tip[x].name, _BLANK_TIP);
     }
-    strcpy(systemSettings.Profile.tip[0].name, "C245-963");
+    strcpy(systemSettings.Profile.tip[0].name, "C245-939");
     systemSettings.Profile.currentNumberOfTips      = 1;
     systemSettings.Profile.defaultTip               = 0;
-    systemSettings.Profile.impedance                = 26;
-    systemSettings.Profile.power                    = 150;
+    systemSettings.Profile.impedance                = 30;
+    systemSettings.Profile.power                    = 130;
     systemSettings.Profile.noIronValue              = 4000;
     systemSettings.Profile.Cal250_default           = C245_Cal250;
     systemSettings.Profile.Cal400_default           = C245_Cal400;
@@ -772,21 +774,21 @@ static void resetCurrentProfile(void){
     for(uint8_t x = 0; x < NUM_TIPS; x++) {
       systemSettings.Profile.tip[x].calADC_At_250   = C210_Cal250;
       systemSettings.Profile.tip[x].calADC_At_400   = C210_Cal400;
-      systemSettings.Profile.tip[x].PID.Kp          = 4000;           // val = /1.000.000
-      systemSettings.Profile.tip[x].PID.Ki          = 5500;           // val = /1.000.000
-      systemSettings.Profile.tip[x].PID.Kd          = 700;           // val = /1.000.000
+      systemSettings.Profile.tip[x].PID.Kp          = 5000;           // val = /1.000.000
+      systemSettings.Profile.tip[x].PID.Ki          = 2500;           // val = /1.000.000
+      systemSettings.Profile.tip[x].PID.Kd          = 2000;           // val = /1.000.000
       systemSettings.Profile.tip[x].PID.maxI        = 70;             // val = /100
       systemSettings.Profile.tip[x].PID.minI        = 0;
       strcpy(systemSettings.Profile.tip[x].name, _BLANK_TIP);
     }
     strcpy(systemSettings.Profile.tip[0].name, "C210-018");
     systemSettings.Profile.currentNumberOfTips      = 1;
-    systemSettings.Profile.defaultTip             = 0;
-    systemSettings.Profile.power                  = 80;
-    systemSettings.Profile.impedance              = 21;
-    systemSettings.Profile.noIronValue            = 1200;
-    systemSettings.Profile.Cal250_default         = C210_Cal250;
-    systemSettings.Profile.Cal400_default         = C210_Cal400;
+    systemSettings.Profile.defaultTip               = 0;
+    systemSettings.Profile.power                    = 80;
+    systemSettings.Profile.impedance                = 21;
+    systemSettings.Profile.noIronValue              = 1200;
+    systemSettings.Profile.Cal250_default           = C210_Cal250;
+    systemSettings.Profile.Cal400_default           = C210_Cal400;
   }
   else{
     Error_Handler();  // We shouldn't get here!
@@ -824,23 +826,29 @@ static void resetCurrentProfile(void){
   systemSettings.Profile.errorResumeMode            = error_resume;
   systemSettings.Profile.sleepTimeout               = (uint32_t)5*60000;      // ms
   systemSettings.Profile.standbyTimeout             = (uint32_t)5*60000;
-  systemSettings.Profile.standbyTemperature         = 180;
-  systemSettings.Profile.defaultTemperature         = 320;
+  systemSettings.Profile.standbyTemperature         = 150;
+  systemSettings.Profile.defaultTemperature         = 300;
   systemSettings.Profile.MaxSetTemperature          = 450;
-  systemSettings.Profile.MinSetTemperature          = 180;
-  systemSettings.Profile.boostTimeout               = 60000;                  // ms
+  systemSettings.Profile.MinSetTemperature          = 100;
+  systemSettings.Profile.boostTimeout               = 30000;                  // ms
   systemSettings.Profile.boostTemperature           = 50;
   systemSettings.Profile.pwmMul                     = 1;
   systemSettings.Profile.readPeriod                 = (200*200)-1;             // 200ms * 200  because timer period is 5us
   systemSettings.Profile.readDelay                  = (20*200)-1;              // 20ms (Also uses 5us clock)
   systemSettings.Profile.tempUnit                   = mode_Celsius;
-  systemSettings.Profile.shakeFiltering             = disable;
+  systemSettings.Profile.shakeFiltering             = enable;
   systemSettings.Profile.WakeInputMode              = mode_shake;
-  systemSettings.Profile.smartActiveEnabled         = disable;
+  systemSettings.Profile.smartActiveEnabled         = enable;
   systemSettings.Profile.smartActiveLoad            = 30;
-  systemSettings.Profile.standDelay                 = 0;
-  systemSettings.Profile.StandMode                  = mode_sleep;
+  systemSettings.Profile.standDelay                 = 2;
+  systemSettings.Profile.StandMode                  = mode_standby;
   systemSettings.Profile.version                    = PROFILE_SETTINGS_VERSION;
+
+  if (systemSettings.currentProfile == profile_C245) {
+    systemSettings.Profile.pwmMul                   = 10;
+    systemSettings.Profile.readPeriod               = (100*200)-1;             // 100ms * 200  because timer period is 5us
+    systemSettings.Profile.readDelay                = (10*200)-1;              // 10ms (Also uses 5us clock)
+  }
 }
 
 void loadProfile(uint8_t profile){

@@ -12,11 +12,11 @@
 #include "pid.h"
 #include "board.h"
 
-#define SWSTRING          "SW: "__DATE__                            // Software version reported in settings screen
+#define SWSTRING          "SW: 2023-12-24"                          // Software version reported in settings screen
 #define SYSTEM_SETTINGS_VERSION   25                                // Change this if you change the system settings struct to prevent getting out of sync
 #define PROFILE_SETTINGS_VERSION  1                                 // Same, but for profile settings struct
 
-#define LANGUAGE_COUNT    7                                         // Number of languages
+#define LANGUAGE_COUNT    2                                         // Number of languages
 #define NUM_PROFILES      3                                         // Number of profiles
 #define NUM_TIPS          35                                        // Number of tips for each profile
 #define TIP_LEN           8                                         // String size for each tip name (Including null termination)
@@ -107,12 +107,7 @@ typedef enum{
   output_High,
 
   lang_english             = 0,
-  lang_russian             = 1,
-  lang_swedish             = 2,
-  lang_german              = 3,
-  lang_turkish             = 4,
-  lang_tchinese            = 5,
-  lang_bulgarian           = 6,
+  lang_tchinese            = 1,
 
 
   dim_off                  = 0,
