@@ -1,0 +1,44 @@
+[
+    {
+      "profile": 1,
+      "tipname": "200H-912",
+      "cal_250": 2054,
+      "cal_400": 3279
+    },
+    {
+      "profile": 1,
+      "tipname": "200H-939",
+      "cal_250": 1940,
+      "cal_400": 3154
+    },
+    {
+      "profile": 1,
+      "tipname": "C245-911",
+      "cal_250": 1966,
+      "cal_400": 3205
+    },
+    {
+      "profile": 1,
+      "tipname": "GEEB-029",
+      "cal_250": 2053,
+      "cal_400": 3301
+    },
+    {
+      "profile": 1,
+      "tipname": "GEEB-908",
+      "cal_250": 1974,
+      "cal_400": 3266
+    },
+    {
+      "profile": 1,
+      "tipname": "GEEB-966",
+      "cal_250": 2014,
+      "cal_400": 3298
+    },
+    {
+      "profile": 1,
+      "tipname": "L245-25K",
+      "cal_250": 1955,
+      "cal_400": 3208
+    }
+  ]
