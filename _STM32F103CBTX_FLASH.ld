@@ -115,6 +115,8 @@ SECTIONS
     . = ALIGN(4);
   } >FLASH
 
+  .backuptips : ALIGN(16) { *(.backuptips) } > FLASH
+
   .ARM.extab   : {
     . = ALIGN(4);
     *(.ARM.extab* .gnu.linkonce.armextab.*)

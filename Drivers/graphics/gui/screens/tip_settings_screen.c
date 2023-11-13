@@ -132,6 +132,10 @@ static int tip_delete(widget_t *w, RE_Rotation_t input) {
 }
 //=========================================================
 static int tip_copy(widget_t *w, RE_Rotation_t input) {                                                         // Keep existing name
+  int i = 0;
+  while (i < TIP_LEN && backupTip.name[i] != ' ') { i++; }
+  backupTip.name[(i < TIP_LEN ? i : TIP_LEN - 1)] = '*';
+
   Selected_Tip = getProfileSettings()->currentNumberOfTips;                                                     // Select next available slot
   comboitem_tip_settings_save->enabled=0;                                                                       // Disable save, will be enabled when the name is modified (If not matching any other tip)
   comboitem_tip_settings_new->enabled=0;                                                                        // Cannot copy a new tip
@@ -359,12 +363,13 @@ static void tip_settings_create(screen_t *scr){
   edit->step = 1;
   edit->setData = (void (*)(void *))&setCal400;
 
-  newComboAction(w, strings[lang]._RESET, &tip_reset, NULL);
   newComboAction(w, strings[lang]._ADD_NEW, &tip_new, &comboitem_tip_settings_new);
   newComboAction(w, strings[lang].TIP_SETTINGS_COPY, &tip_copy, &comboitem_tip_settings_copy);
-  newComboAction(w, strings[lang].TIP_SETTINGS_DELETE, &tip_delete, &comboitem_tip_settings_delete);
   newComboAction(w, strings[lang]._SAVE, &tip_save, &comboitem_tip_settings_save);
   newComboScreen(w, strings[lang]._CANCEL, last_scr, NULL);
+  newComboScreen(w, "---------------", NULL, NULL);
+  newComboAction(w, strings[lang]._RESET, &tip_reset, NULL);
+  newComboAction(w, strings[lang].TIP_SETTINGS_DELETE, &tip_delete, &comboitem_tip_settings_delete);
 }
 
 
