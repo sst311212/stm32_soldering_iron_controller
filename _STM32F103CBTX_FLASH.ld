@@ -37,9 +37,10 @@ _Min_Stack_Size = 0x300 ;	/* required amount of stack */
 MEMORY
 {
   RAM              (xrw) : ORIGIN = 0x20000000, LENGTH = 20K
-  FLASH            (rx)  : ORIGIN = 0x8000000,  LENGTH = 122K
+  FLASH            (rx)  : ORIGIN = 0x8000000,  LENGTH = 121K
   /* areas for storing the settings, keep the start and the end on page boundaries and continuous */
-  TEMP_SETTINGS    (rx)  : ORIGIN = ORIGIN(FLASH) + LENGTH(FLASH),                        LENGTH = 2048
+  BACKUP_TIPS      (r)   : ORIGIN = ORIGIN(FLASH) + LENGTH(FLASH),                        LENGTH = 1024
+  TEMP_SETTINGS    (rx)  : ORIGIN = ORIGIN(BACKUP_TIPS) + LENGTH(BACKUP_TIPS),            LENGTH = 2048
   PROFILE_SETTINGS (rx)  : ORIGIN = ORIGIN(TEMP_SETTINGS) + LENGTH(TEMP_SETTINGS),        LENGTH = 3840
   GLOBAL_SETTINGS  (rx)  : ORIGIN = ORIGIN(PROFILE_SETTINGS) + LENGTH(PROFILE_SETTINGS),  LENGTH = 128
   ADDON_SETTINGS   (rx)  : ORIGIN = ORIGIN(GLOBAL_SETTINGS)  + LENGTH(GLOBAL_SETTINGS),   LENGTH = 128
@@ -55,14 +56,18 @@ __TEMP_SETTINGS_SECTION_LENGTH = LENGTH(TEMP_SETTINGS);
 SECTIONS
 {
   /* Firmware settings storage section(s) */
-    
+  .backupTips :
+  {
+    . = ALIGN(1);
+    KEEP(*(.backupTips))
+  } > BACKUP_TIPS
+
   .tempSettings (NOLOAD) :
   {
     . = ALIGN(4);
     KEEP(*(.tempSetpoint))
   } > TEMP_SETTINGS
 
-/* Firmware settings storage section(s) */  
   .profileSettings (NOLOAD) :
   {
     . = ALIGN(4);
@@ -79,7 +84,7 @@ SECTIONS
   {
     . = ALIGN(4);
     KEEP(*(.addonSettings))/* .settings sections */
-  } >ADDON_SETTINGS
+  } > ADDON_SETTINGS
 
   /* The startup code into "FLASH" Rom type memory */
   .isr_vector :

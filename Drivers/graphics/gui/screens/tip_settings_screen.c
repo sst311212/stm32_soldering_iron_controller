@@ -138,8 +138,11 @@ static int tip_delete(widget_t *w, RE_Rotation_t input) {
 //=========================================================
 static int tip_copy(widget_t *w, RE_Rotation_t input) {
   Selected_Tip = systemSettings.Profile.currentNumberOfTips;                                                    // Select next available slot
-  if(!tip_different)                                                                                            // Keep name it was already edited
-    strcpy(backupTip.name, _BLANK_TIP);                                                                         // Else, copy empty name (But keep the settings from the tip we're copying from)
+
+  int i = 0;
+  while (i < TIP_LEN && backupTip.name[i] != ' ') { i++; }
+  backupTip.name[(i < TIP_LEN ? i : TIP_LEN - 1)] = '*';
+
   comboitem_tip_settings_save->enabled=0;                                                                       // Disable save, will be enabled when the name is modified
   comboitem_tip_settings_copy->enabled=0;                                                                       // Cannot copy a new tip
   comboitem_tip_settings_delete->enabled=0;                                                                     // Cannot delete a new tip
@@ -186,14 +189,10 @@ static int tip_settings_processInput(screen_t * scr, RE_Rotation_t input, RE_Sta
         strcpy(flashTip, flashProfilesSettings.Profile[systemSettings.currentProfile].tip[i].name);               // Copy tip name from flash
         Flash_to_Edit(flashTip);                                                                                  // Convert to editor format (Fill with spaces)
         if(strcmp(backupTip.name, flashTip) == 0){  // Compare names with other tips                              // Compare
-          if(i==Selected_Tip)                                                                                     // If same name as tip being edited, clear flag
-            tip_different=0;
-          else
+          if(i!=Selected_Tip)                                                                                     // If same name as tip being edited, clear flag
             enable=0;                                                                                             // If match is found with a different tip, disable save button
           break;
         }
-        else if(i==Selected_Tip)                                                                                  // If different name than tip being edited, set flag
-          tip_different=1;
       }
     }
     comboitem_tip_settings_save->enabled=enable;
@@ -209,7 +208,6 @@ static void tip_settings_onExit(screen_t *scr){
   }
 }
 static void tip_settings_onEnter(screen_t *scr){
-  tip_different = 0;
   comboResetIndex(Screen_tip_settings.current_widget);
   if(newTip){                                                                                                   // If new tip selected
     newTip=0;
@@ -220,7 +218,7 @@ static void tip_settings_onEnter(screen_t *scr){
     comboitem_tip_settings_delete->enabled=0;                                                                   // Cannot delete a new tip
   }
   else{
-    backupTip = systemSettings.currentTipData;                                                                             // Copy current tip
+    backupTip = flashProfilesSettings.Profile[systemSettings.currentProfile].tip[Selected_Tip];                 // Copy current tip
     comboitem_tip_settings_delete->enabled = (systemSettings.Profile.currentNumberOfTips>1);                    // If more than 1 tip in the system, enable delete
     comboitem_tip_settings_copy->enabled = (systemSettings.Profile.currentNumberOfTips<NUM_TIPS);               // If tip slots available, enable copy button
     Flash_to_Edit(backupTip.name);

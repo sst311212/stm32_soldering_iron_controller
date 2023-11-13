@@ -23,10 +23,10 @@ const settings_t defaultSystemSettings = {
 #ifdef ST7565
   .contrastOrBrightness = 34,
 #else
-  .contrastOrBrightness = 255,
+  .contrastOrBrightness = 125,
 #endif
   .dim_mode             = dim_always,
-  .dim_Timeout          = 10000,                // ms
+  .dim_Timeout          = 5000,                 // ms
   .dim_inSleep          = enable,
   .displayStartColumn   = DISPLAY_START_COLUMN,
   .displayStartLine     = DISPLAY_START_LINE,
@@ -41,21 +41,21 @@ const settings_t defaultSystemSettings = {
   .displayResRatio      = 5,                    // For ST7565 only
 #endif
   .guiUpdateDelay       = 200,                  // ms
-  .guiTempDenoise       = 5,                    // ±5°C
+  .guiTempDenoise       = 2,                    // ±5°C
   .tempUnit             = mode_Celsius,
   .tempStep             = 5,                    // 5º steps
   .tempBigStep          = 20,                   // 20º big steps
   .activeDetection      = true,
   .hasBattery           = false,
-  .coldBoost            = true,
+  .coldBoost            = false,
   .lvp                  = 110,                  // 11.0V Low voltage
   .initMode             = mode_sleep,           // Safer to boot in sleep mode by default!
   .buzzerMode           = disable,
-  .buttonWakeMode       = wake_all,
-  .shakeWakeMode        = wake_all,
+  .buttonWakeMode       = wake_sleep,
+  .shakeWakeMode        = wake_standby,
   .EncoderMode          = RE_Mode_Forward,
   .debugEnabled         = disable,
-  .language             = lang_english,
+  .language             = lang_tchinese,
   .clone_fix            = disable,
 };
 
@@ -116,22 +116,22 @@ const profile_settings_t defaultProfileSettings = {
   .errorResumeMode            = error_resume,
   .sleepTimeout               = (uint32_t)5*60000,      // ms
   .standbyTimeout             = (uint32_t)5*60000,
-  .standbyTemperature         = 180,
-  .defaultTemperature         = 320,
+  .standbyTemperature         = 150,
+  .defaultTemperature         = 300,
   .MaxSetTemperature          = 450,
-  .MinSetTemperature          = 180,
-  .boostTimeout               = 60000,                  // ms
+  .MinSetTemperature          = 100,
+  .boostTimeout               = 30000,                  // ms
   .boostTemperature           = 50,
   .pwmMul                     = 1,
-  .readPeriod                 = (200*200)-1,             // 200ms * 200  because timer period is 5us
-  .readDelay                  = (20*200)-1,              // 20ms (Also uses 5us clock)
+  .readPeriod                 = (100*200)-1,             // 200ms * 200  because timer period is 5us
+  .readDelay                  = (10*200)-1,              // 20ms (Also uses 5us clock)
   .tempUnit                   = mode_Celsius,
-  .shakeFiltering             = disable,
+  .shakeFiltering             = enable,
   .WakeInputMode              = mode_shake,
-  .smartActiveEnabled         = disable,
+  .smartActiveEnabled         = enable,
   .smartActiveLoad            = 30,
-  .standDelay                 = 0,
-  .StandMode                  = mode_sleep,
+  .standDelay                 = 2,
+  .StandMode                  = mode_standby,
   .version                    = PROFILE_SETTINGS_VERSION,
 };
 
@@ -141,6 +141,30 @@ __attribute__((section(".tempSettings"))) temp_settings_t temp_settings;
 #ifdef ENABLE_ADDONS
 __attribute__((section(".addonSettings"))) flashSettingsAddons_t flashAddonSettings;
 #endif
+
+typedef struct {
+  uint8_t     profile;
+  char        tipname[9];
+  uint16_t    cal_250;
+  uint16_t    cal_400;
+  uint16_t    padding;
+} backup_data_t;
+
+typedef struct {
+  char             tipHead[12];
+  uint32_t         tipNums;
+  backup_data_t    tipData[63];
+} backup_tips_t;
+
+__attribute__((section(".backupTips"))) backup_tips_t backup_tips = {
+  "#backupTips#",
+  /*3,
+  {
+    { profile_T12, "T12-D24", T12_Cal250, T12_Cal400 },
+    { profile_C245, "C245-911", C245_Cal250, C245_Cal400 },
+    { profile_C210, "C210-003", C210_Cal250, C210_Cal400 },
+  }*/
+};
 
 static uint16_t flashTempIndex;
 static uint16_t flashTemp;
@@ -610,13 +634,16 @@ void loadSettingsFromBackupRam(void) {
     bkpRamData.values.lastProfile = profile_T12;
     writeBackupRam();
 
-    Oled_error_init();
-    putStrAligned("New/low batt?", 0, align_center);
-    putStrAligned("Forgot last", 16, align_center);
-    putStrAligned("used settings.", 32, align_center);
-    putStrAligned("Restored dflt.", 48, align_left);
-    update_display();
-    ErrCountDown(3,117,50);
+    bkpRamData.values.lastProfile = systemSettings.currentProfile;
+    bkpRamData.values.lastTipTemp[systemSettings.currentProfile] = flashTemp;
+    bkpRamData.values.lastSelTip[systemSettings.currentProfile] = flashTip[systemSettings.currentProfile];
+    // Oled_error_init();
+    // putStrAligned("New/low batt?", 0, align_center);
+    // putStrAligned("Forgot last", 16, align_center);
+    // putStrAligned("used settings.", 32, align_center);
+    // putStrAligned("Restored dflt.", 48, align_left);
+    // update_display();
+    // ErrCountDown(3,117,50);
   }
   systemSettings.currentProfile = bkpRamData.values.lastProfile;
 }
@@ -896,23 +923,23 @@ static void resetProfile(profile_t * data, uint8_t profile){
       data->tip[x].calADC_At_250   = T12_Cal250;
       data->tip[x].calADC_At_400   = T12_Cal400;     // These values are way lower, but better to be safe than sorry
       data->tip[x].PID.Kp          = 4000;           // val = /1.000.000
-      data->tip[x].PID.Ki          = 5500;           // val = /1.000.000
-      data->tip[x].PID.Kd          = 700;           // val = /1.000.000
-      data->tip[x].PID.maxI        = 70;             // val = /100
+      data->tip[x].PID.Ki          = 5000;           // val = /1.000.000
+      data->tip[x].PID.Kd          = 1000;           // val = /1.000.000
+      data->tip[x].PID.maxI        = 65;             // val = /100
       data->tip[x].PID.minI        = 0;              // val = /100
       strcpy(data->tip[x].name, _BLANK_TIP);         // Empty name
     }
-    strcpy(data->tip[0].name, "T12-BC3");               // Put some generic name.
+    strcpy(data->tip[0].name, "T12-BC3");            // Put some generic name.
   }
 
   else if(profile==profile_C245){
     for(uint8_t x = 0; x < NUM_TIPS; x++) {
       data->tip[x].calADC_At_250   = C245_Cal250;
       data->tip[x].calADC_At_400   = C245_Cal400;
-      data->tip[x].PID.Kp          = 4000;           // val = /1.000.000
+      data->tip[x].PID.Kp          = 3500;           // val = /1.000.000
       data->tip[x].PID.Ki          = 5500;           // val = /1.000.000
-      data->tip[x].PID.Kd          = 700;           // val = /1.000.000
-      data->tip[x].PID.maxI        = 70;             // val = /100
+      data->tip[x].PID.Kd          = 1000;           // val = /1.000.000
+      data->tip[x].PID.maxI        = 65;             // val = /100
       data->tip[x].PID.minI        = 0;
       strcpy(data->tip[x].name, _BLANK_TIP);
     }
@@ -923,10 +950,10 @@ static void resetProfile(profile_t * data, uint8_t profile){
     for(uint8_t x = 0; x < NUM_TIPS; x++) {
       data->tip[x].calADC_At_250   = C210_Cal250;
       data->tip[x].calADC_At_400   = C210_Cal400;
-      data->tip[x].PID.Kp          = 4000;           // val = /1.000.000
+      data->tip[x].PID.Kp          = 3500;           // val = /1.000.000
       data->tip[x].PID.Ki          = 5500;           // val = /1.000.000
-      data->tip[x].PID.Kd          = 700;           // val = /1.000.000
-      data->tip[x].PID.maxI        = 70;             // val = /100
+      data->tip[x].PID.Kd          = 1500;           // val = /1.000.000
+      data->tip[x].PID.maxI        = 65;             // val = /100
       data->tip[x].PID.minI        = 0;
       strcpy(data->tip[x].name, _BLANK_TIP);
     }
@@ -935,6 +962,20 @@ static void resetProfile(profile_t * data, uint8_t profile){
   else{
     Error_Handler();  // We shouldn't get here!
   }
+
+  if (profile == profile_C245)
+    data->settings.pwmMul = 10;
+
+  for (int i = 0; backup_tips.tipNums <= 63 && i < backup_tips.tipNums; i++) {
+    backup_data_t* tip = &backup_tips.tipData[i];
+    if (tip->profile <= profile_C210 && tip->profile == profile) {
+      int x = data->settings.currentNumberOfTips++;
+      memcpy(data->tip[x].name, tip->tipname, strlen(tip->tipname));
+      data->tip[x].calADC_At_250 = tip->cal_250;
+      data->tip[x].calADC_At_400 = tip->cal_400;
+    }
+  }
+
   __set_PRIMASK(_irq);
 }
 
@@ -957,8 +998,8 @@ static void resetProfileSettings(profile_settings_t * data, uint8_t profile){
   else if(profile==profile_C245){
     data->ID = profile_C245;
     data->currentNumberOfTips      = 1;
-    data->impedance                = 26;
-    data->power                    = 150;
+    data->impedance                = 30;
+    data->power                    = 130;
     data->noIronValue              = 4000;
     data->Cal250_default           = C245_Cal250;
     data->Cal400_default           = C245_Cal400;
@@ -966,12 +1007,12 @@ static void resetProfileSettings(profile_settings_t * data, uint8_t profile){
 
   else if(profile==profile_C210){
     data->ID = profile_C210;
-    data->currentNumberOfTips    = 1;
-    data->power                  = 80;
-    data->impedance              = 21;
-    data->noIronValue            = 1200;
-    data->Cal250_default         = C210_Cal250;
-    data->Cal400_default         = C210_Cal400;
+    data->currentNumberOfTips      = 1;
+    data->power                    = 80;
+    data->impedance                = 21;
+    data->noIronValue              = 1200;
+    data->Cal250_default           = C210_Cal250;
+    data->Cal400_default           = C210_Cal400;
   }
   else{
     Error_Handler();  // We shouldn't get here!

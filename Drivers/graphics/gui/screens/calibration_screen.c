@@ -337,7 +337,9 @@ static void Cal_Start_OnExit(screen_t *scr) {
   setSystemTempUnit(backupTempUnit);
   restore_tip();
   if(current_state==cal_save){
-    saveSettings(save_All, no_reboot);              // Save now we have all heap free
+    systemSettings.tipUpdateMode = mode_SaveTip;
+    systemSettings.tipUpdateIndex = systemSettings.currentTip;
+    saveSettings(save_Tip, no_reboot);              // Save now we have all heap free
   }
 }
 

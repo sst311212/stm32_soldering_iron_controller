@@ -122,6 +122,7 @@ void ironInit(TIM_HandleTypeDef *delaytimer, TIM_HandleTypeDef *pwmtimer, uint32
 
 void handleIron(void) {
   static uint32_t reachedTime = 0;
+  static uint8_t coldBoost_reached = 0;
   CurrentTime = HAL_GetTick();
   if(!Iron.Error.safeMode){
     if( (systemSettings.setupMode==enable) || systemSettings.settings.version!=SYSTEM_SETTINGS_VERSION || systemSettings.Profile.version!=PROFILE_SETTINGS_VERSION ||
@@ -181,7 +182,8 @@ void handleIron(void) {
       }
 
     }
-    if((Iron.CurrentMode==mode_coldboost) && (mode_time>12000)){                              // If cold boost mode and time expired
+    if((Iron.CurrentMode==mode_coldboost) && coldBoost_reached){                              // If cold boost mode and time expired
+      coldBoost_reached = 0;
       setCurrentMode(mode_run);
     }
     else if((Iron.CurrentMode==mode_boost) && (mode_time>systemSettings.Profile.boostTimeout)){    // If boost mode and time expired
@@ -262,6 +264,9 @@ void handleIron(void) {
         temperatureReached( Iron.TargetTemperature);
       }
     }
+  }
+  else if (Iron.CurrentMode == mode_coldboost && Iron.temperatureReached) {
+    coldBoost_reached = 1;
   }
   else{
     reachedTime = 0;
@@ -560,7 +565,7 @@ void setCurrentMode(uint8_t mode){
   Iron.CurrentModeTimer = CurrentTime;                                                    // Refresh current mode timer
 
   if(!getIronCalibrationMode() && systemSettings.settings.coldBoost){
-    int16_t diff = (systemSettings.Profile.tempUnit == mode_Farenheit) ? 200 : 100;
+    int16_t diff = (systemSettings.Profile.tempUnit == mode_Farenheit) ? 300 : 150;
     int16_t tipTemp = (systemSettings.Profile.tempUnit == mode_Farenheit) ? last_TIP_F : last_TIP_C;
     if(mode==mode_run && getCurrentMode() < mode_run && (Iron.UserSetTemperature - tipTemp)>diff)
       mode=mode_coldboost;
@@ -583,7 +588,7 @@ void setCurrentMode(uint8_t mode){
     }
   }
   else if(mode==mode_coldboost){
-    Iron.TargetTemperature = Iron.UserSetTemperature + (systemSettings.Profile.tempUnit == mode_Farenheit ? 100 : 50);
+    Iron.TargetTemperature = Iron.UserSetTemperature + (systemSettings.Profile.tempUnit == mode_Farenheit ? 122 : 50);
     if(Iron.TargetTemperature>systemSettings.Profile.MaxSetTemperature){
       Iron.TargetTemperature=systemSettings.Profile.MaxSetTemperature;
     }
