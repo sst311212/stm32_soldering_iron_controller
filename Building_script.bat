@@ -1,7 +1,7 @@
 @echo off
 
 :: [Default search path] Installation folder must be named STM32CubeIDE!
-SET SEARCH_PATH="C:\ST"
+SET SEARCH_PATH="%ProgramFiles%\ST"
 
 :: [ENABLE THIS LINES TO MANUALLY SET THE TOOL PATHS]
 :: set IDEPATH="C:\ST\STM32CubeIDE_1.7.0\STM32CubeIDE"
@@ -10,12 +10,9 @@ SET SEARCH_PATH="C:\ST"
 :: [Java path] You also use absolute path, ex "C:\JDK_19\bin\java.exe"
 :: set JAVA_CMD="java.exe"
 
-
-SET MODELS=    "BOARDS\KSGER\v1.5\STM32F103";^
-               "BOARDS\KSGER\v2\STM32F101";^
-               "BOARDS\KSGER\v3\STM32F101";^
-               "BOARDS\Quicko\STM32F072";^
-               "BOARDS\Quicko\STM32F103"
+SET MODELS=    "BOARDS\Custom\DXCHMEI_2020";^
+               "BOARDS\Custom\KSGER_GX_V2.1S";^
+               "BOARDS\Custom\XinYue_JBC_V2.1S"
 SET RUN_CUBEMX="n"
 SET COMPILE="n"
 
@@ -25,16 +22,15 @@ SET BUILD_TARGET=
 
 IF "%~1"=="" GOTO :BUILD_PROMPT
 IF %~1 LSS 1 GOTO :BUILD_HELP
-IF %~1 GTR 11 GOTO :BUILD_HELP
+IF %~1 GTR 5 GOTO :BUILD_HELP
 SET BUILD_TARGET=%~1
 
-IF "%BUILD_TARGET%"=="10" GOTO :NO_BUILD_PROMPT
+IF "%BUILD_TARGET%"=="4" GOTO :NO_BUILD_PROMPT
 IF "%~2"=="" GOTO :BUILD_HELP
 IF %~2 LSS 1 GOTO :BUILD_HELP
 IF %~2 GTR 4 GOTO :BUILD_HELP
 SET BUILD_OPT=%~2
 GOTO :NO_BUILD_PROMPT
-
 
 :BUILD_HELP
 cls
@@ -46,17 +42,11 @@ echo.
 echo Usage: Building_script.bat [PROFILE] [OPT]
 echo.
 echo        PROFILE:
-echo                    1  KSGER v1.5     OLED
-echo                    2  KSGER v1.5     LCD
-echo                    3  KSGER v2       OLED
-echo                    4  KSGER v3       OLED
-echo                    5  KSGER v3       LCD
-echo                    6  Quicko 072     OLED
-echo                    7  Quicko 072     LCD
-echo                    8  Quicko 103     OLED
-echo                    9  Quicko 103     LCD
-echo                    10 Build all
-echo                    11 Quit
+echo                    1  DXCHMEI_2020         OLED
+echo                    2  KSGER GX V2.1S       OLED
+echo                    3  XinYue JBC V2.1S     OLED
+echo                    4  Build all
+echo                    5  Quit
 echo.
 echo        OPT:
 echo                    1  Only copy files
@@ -69,42 +59,29 @@ echo.
 set ERR=1
 GOTO :EXIT
 
-
 :BUILD_PROMPT
 cls
 echo.
 echo     STM32 Soldering firmware automated builder.
 echo.
-echo     KEY   PROFILE        DISPLAY
+echo     KEY   PROFILE              DISPLAY
 echo.
-echo     [1]   KSGER v1.5     OLED
-echo     [2]   KSGER v1.5     LCD
-echo     [3]   KSGER v2       OLED
-echo     [4]   KSGER v3       OLED
-echo     [5]   KSGER v3       LCD
-echo     [6]   Quicko 072     OLED
-echo     [7]   Quicko 072     LCD
-echo     [8]   Quicko 103     OLED
-echo     [9]   Quicko 103     LCD
+echo     [1]   DXCHMEI_2020         OLED
+echo     [2]   KSGER GX V2.1S       OLED
+echo     [3]   XinYue JBC V2.1S     OLED
 echo     [A]   Build all
 echo     [Q]   Quit
 echo.
-CHOICE /C 123456789AQ /N /M "Please select your building target:"
+CHOICE /C 123AQ /N /M "Please select your building target:"
 set BUILD_TARGET=%ERRORLEVEL%
 cls
 
 :NO_BUILD_PROMPT
-IF "%BUILD_TARGET%"=="1" SET PROFILE="BOARDS\KSGER\v1.5\STM32F103" && SET DISPLAY="SSD1306"&& GOTO :OPT_PROMPT
-IF "%BUILD_TARGET%"=="2" SET PROFILE="BOARDS\KSGER\v1.5\STM32F103" && SET DISPLAY="ST7565"&& GOTO :OPT_PROMPT
-IF "%BUILD_TARGET%"=="3" SET PROFILE="BOARDS\KSGER\v2\STM32F101" && SET DISPLAY="SSD1306"&& GOTO :OPT_PROMPT
-IF "%BUILD_TARGET%"=="4" SET PROFILE="BOARDS\KSGER\v3\STM32F101" && SET DISPLAY="SSD1306"&& GOTO :OPT_PROMPT
-IF "%BUILD_TARGET%"=="5" SET PROFILE="BOARDS\KSGER\v3\STM32F101" && SET DISPLAY="ST7565"&& GOTO :OPT_PROMPT
-IF "%BUILD_TARGET%"=="6" SET PROFILE="BOARDS\Quicko\STM32F072" && SET DISPLAY="SSD1306"&& GOTO :OPT_PROMPT
-IF "%BUILD_TARGET%"=="7" SET PROFILE="BOARDS\Quicko\STM32F072" && SET DISPLAY="ST7565"&& GOTO :OPT_PROMPT
-IF "%BUILD_TARGET%"=="8" SET PROFILE="BOARDS\Quicko\STM32F103" && SET DISPLAY="SSD1306"&& GOTO :OPT_PROMPT
-IF "%BUILD_TARGET%"=="9" SET PROFILE="BOARDS\Quicko\STM32F103" && SET DISPLAY="ST7565"&& GOTO :OPT_PROMPT
-IF "%BUILD_TARGET%"=="10" SET PROFILE="" && SET RUN_CUBEMX="y" && SET COMPILE="y" && SET DISPLAY=""&& GOTO :TOOLS
-IF "%BUILD_TARGET%"=="11" GOTO :EXIT
+IF "%BUILD_TARGET%"=="1" SET PROFILE="BOARDS\Custom\DXCHMEI_2020" && SET DISPLAY="SSD1306"&& GOTO :OPT_PROMPT
+IF "%BUILD_TARGET%"=="2" SET PROFILE="BOARDS\Custom\KSGER_GX_V2.1S" && SET DISPLAY="SSD1306"&& GOTO :OPT_PROMPT
+IF "%BUILD_TARGET%"=="3" SET PROFILE="BOARDS\Custom\XinYue_JBC_V2.1S" && SET DISPLAY="SSD1306"&& GOTO :OPT_PROMPT
+IF "%BUILD_TARGET%"=="4" SET PROFILE="" && SET RUN_CUBEMX="y" && SET COMPILE="y" && SET DISPLAY="SSD1306"&& GOTO :TOOLS
+IF "%BUILD_TARGET%"=="5" GOTO :EXIT
 
 :OPT_PROMPT
 IF NOT "%BUILD_OPT%"=="" GOTO :NO_OPT_PROMPT
@@ -163,7 +140,6 @@ goto :DONE
 
 :: ##################  [START]  ##################
 :START
-
 echo [32mFound CubeIDE at:[0m
 echo %IDE:"=%
 echo.
@@ -173,6 +149,7 @@ echo.
 echo [32mFound CubeMX at:[0m
 echo %MX:"=%
 echo.
+
 :: ##################  [BUILD LOOP]  ##################
 :ONLYCOPY
 for %%M in (%MODELS%) do (
@@ -198,7 +175,7 @@ IF %RUN_CUBEMX%=="n" ( EXIT /B )
 copy /Y STM32SolderingStation.ioc STM32SolderingStation.bak >nul
 
 echo [94mRunning CubeMX...[0m
-start /w /min "CubeMX" %JAVA_CMD% -jar "%MX%" -q cubemx_script >nul
+start /w /min "CubeMX" "%JAVA_CMD%" -jar "%MX%" -q cubemx_script >nul
 IF %ERRORLEVEL% NEQ 0 (
   echo [91mCubeMX error![0m : %ERRORLEVEL%
   set ERR=1
@@ -215,7 +192,7 @@ IF %DISPLAY%=="" (
 )
 echo [94mCompiling...[0m    DISPLAY:%DISP:"=%
 echo start /w /min "CubeIDE" %IDE% --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -import %cd% -build STM32SolderingStation/%DISP:"=%_Release 2>nul >nul
-start /w /min "CubeIDE" %IDE% --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -import %cd% -build STM32SolderingStation/%DISP:"=%_Release 2>nul >nul
+start /w /min "CubeIDE" "%IDE%" --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -import %cd% -build STM32SolderingStation/%DISP:"=%_Release 2>nul >nul
 IF %ERRORLEVEL% NEQ 0 (
   echo [91mCompiler error![0m : %ERRORLEVEL%
   set ERR=1
@@ -237,8 +214,8 @@ move /Y STM32SolderingStation.bak STM32SolderingStation.ioc >nul 2>nul
 :: Cleanup
 rd /Q /S SSD1306_Release ST7565_Release EWARM Application 2>nul
 
-IF "%BUILD_TARGET%"=="10" GOTO :EXIT
+IF "%BUILD_TARGET%"=="4" GOTO :EXIT
 pause
 
 :EXIT
-exit %ERR%
+exit /b %ERR%
