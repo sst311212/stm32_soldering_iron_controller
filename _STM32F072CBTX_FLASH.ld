@@ -113,6 +113,11 @@ SECTIONS
     *(.rodata)         /* .rodata sections (constants, strings, etc.) */
     *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
     . = ALIGN(4);
+
+    . = ALIGN(16);
+    *(.rodata.backuptips)
+    *(.rodata.backuptips*)
+    . = ALIGN(4);
   } >FLASH
 
   .ARM.extab   : {

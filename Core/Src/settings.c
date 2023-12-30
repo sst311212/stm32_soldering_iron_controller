@@ -177,6 +177,30 @@ __attribute__((section(".tempSettings"))) temp_settings_t temp_settings;
 __attribute__((section(".addonSettings"))) flashSettingsAddons_t flashAddonSettings;
 #endif
 
+typedef struct {
+  uint8_t     profile;
+  char        tipname[9];
+  uint16_t    cal_250;
+  uint16_t    cal_400;
+  uint16_t    padding;
+} backup_data_t;
+
+typedef struct {
+  char             tipHead[12];
+  uint32_t         tipNums;
+  backup_data_t    tipData[63];
+} backup_tips_t;
+
+__attribute__((section(".rodata.backuptips"))) backup_tips_t backup_tips = {
+  "#BACKUPTIPS#",
+  /*3,
+  {
+    { profile_T12, "T12-D24", T12_Cal250, T12_Cal400 },
+    { profile_C245, "C245-911", C245_Cal250, C245_Cal400 },
+    { profile_C210, "C210-003", C210_Cal250, C210_Cal400 },
+  }*/
+};
+
 static uint16_t flashTempIndex;
 static uint16_t flashTemp;
 static uint8_t flashTipIndex[NUM_PROFILES];
@@ -955,6 +979,17 @@ static void resetProfile(profile_t * data, uint8_t profile){
   else if(profile==profile_C210){
     strcpy(data->tip[0].name, "C210-018");
   }
+
+  for (int i = 0; backup_tips.tipNums <= 63 && i < backup_tips.tipNums; i++) {
+    backup_data_t* tip = &backup_tips.tipData[i];
+    if (tip->profile <= profile_C210 && tip->profile == profile) {
+      int x = data->settings.currentNumberOfTips++;
+      memcpy(data->tip[x].name, tip->tipname, strlen(tip->tipname));
+      data->tip[x].calADC_At_250 = tip->cal_250;
+      data->tip[x].calADC_At_400 = tip->cal_400;
+    }
+  }
+
   __set_PRIMASK(_irq);
 }
 
