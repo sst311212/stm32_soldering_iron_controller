@@ -191,14 +191,15 @@ IF %CURRENT%=="" ( EXIT /B )
 echo [93mProfile: %CURRENT%[0m     
 del Core\Inc\board.h Core\Inc\*stm32*.* Core\Src\*stm32*.* Core\Startup\*.s .cproject .project *.ioc *.bin /Q 2>nul >nul
 rd /S /Q Drivers\CMSIS Drivers\STM32F0xx_HAL_Driver Drivers\STM32F1xx_HAL_Driver 2>nul >nul
-xcopy /e /k /h /i /s /q /y %CURRENT% >nul
+(echo .bin & echo .list)>"%TEMP%\uncopy.txt"
+xcopy /e /k /h /i /s /q /y /exclude:%TEMP%\uncopy.txt %CURRENT% >nul
 IF %RUN_CUBEMX%=="n" ( EXIT /B )
 
 :: Workaround required, CubeMX keeps messing the IOC, changing the project to EWARM, won't work in CubeIDE after generation
 copy /Y STM32SolderingStation.ioc STM32SolderingStation.bak >nul
 
 echo [94mRunning CubeMX...[0m
-start /w /min "CubeMX" %JAVA_CMD% -jar "%MX%" -q cubemx_script >nul
+start /w /min "CubeMX" "%JAVA_CMD%" -jar "%MX%" -q cubemx_script >nul
 IF %ERRORLEVEL% NEQ 0 (
   echo [91mCubeMX error![0m : %ERRORLEVEL%
   set ERR=1
@@ -215,7 +216,7 @@ IF %DISPLAY%=="" (
 )
 echo [94mCompiling...[0m    DISPLAY:%DISP:"=%
 echo start /w /min "CubeIDE" %IDE% --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -import %cd% -build STM32SolderingStation/%DISP:"=%_Release 2>nul >nul
-start /w /min "CubeIDE" %IDE% --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -import %cd% -build STM32SolderingStation/%DISP:"=%_Release 2>nul >nul
+start /w /min "CubeIDE" "%IDE%" --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -import %cd% -build STM32SolderingStation/%DISP:"=%_Release 2>nul >nul
 IF %ERRORLEVEL% NEQ 0 (
   echo [91mCompiler error![0m : %ERRORLEVEL%
   set ERR=1
@@ -224,6 +225,18 @@ IF %ERRORLEVEL% NEQ 0 (
 move /Y "%DISP:"=%_Release\STM32SolderingStation.bin" "%CURRENT:"=%\%DISP:"=%.bin" 2>nul >nul
 move /Y "%DISP:"=%_Release\STM32SolderingStation.list" "%CURRENT:"=%\%DISP:"=%.list" 2>nul >nul
 IF %ERRORLEVEL% EQU 0 ( echo                 Binary placed at %CURRENT:"=%\%DISP:"=%.bin
+) ELSE ( echo                 %CURRENT:"=% doesn't contain %DISP:"=% profile ?)
+echo [94mCompiling...[0m    DISPLAY:%DISP:"=% Chinses Ver.
+echo start /w /min "CubeIDE" %IDE% --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -import %cd% -build STM32SolderingStation/%DISP:"=%_Release_Chinese 2>nul >nul
+start /w /min "CubeIDE" "%IDE%" --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -import %cd% -build STM32SolderingStation/%DISP:"=%_Release_Chinese 2>nul >nul
+IF %ERRORLEVEL% NEQ 0 (
+  echo [91mCompiler error![0m : %ERRORLEVEL%
+  set ERR=1
+  goto :DONE
+)
+move /Y "%DISP:"=%_Release_Chinese\STM32SolderingStation.bin" "%CURRENT:"=%\%DISP:"=%_CH.bin" 2>nul >nul
+move /Y "%DISP:"=%_Release_Chinese\STM32SolderingStation.list" "%CURRENT:"=%\%DISP:"=%_CH.list" 2>nul >nul
+IF %ERRORLEVEL% EQU 0 ( echo                 Binary placed at %CURRENT:"=%\%DISP:"=%_CH.bin
 ) ELSE ( echo                 %CURRENT:"=% doesn't contain %DISP:"=% profile ?)
 IF %DISPLAY%=="" ( IF %DISP%=="SSD1306" ( GOTO :COMPILE ) )
 echo.
@@ -235,7 +248,7 @@ timeout 1 >nul
 :: Restore unmodified IOC file so it keeps working in CubeIDE
 move /Y STM32SolderingStation.bak STM32SolderingStation.ioc >nul 2>nul
 :: Cleanup
-rd /Q /S SSD1306_Release ST7565_Release EWARM Application 2>nul
+rd /Q /S SSD1306_Release SSD1306_Release_Chinese ST7565_Release ST7565_Release_Chinese EWARM Application 2>nul
 
 IF "%BUILD_TARGET%"=="10" GOTO :EXIT
 pause
