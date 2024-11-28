@@ -23,11 +23,11 @@ const systemSettings_t defaultSystemSettings = {
 #ifdef ST7565
   .contrastOrBrightness = 34,
 #else
-  .contrastOrBrightness = 255,
+  .contrastOrBrightness = 125,
 #endif
   .dim_mode             = dim_always,
-  .dim_Timeout          = 10000,                // ms
-  .dim_inSleep          = enable,
+  .dim_Timeout          = 5000,                 // ms
+  .dim_inSleep          = disable,
   .displayStartColumn   = DISPLAY_START_COLUMN,
   .displayStartLine     = DISPLAY_START_LINE,
   .displayXflip         = 1,
@@ -41,7 +41,7 @@ const systemSettings_t defaultSystemSettings = {
   .displayResRatio      = 5,                    // For ST7565 only
 #endif
   .guiUpdateDelay       = 200,                  // ms
-  .guiTempDenoise       = 5,                    // ±5°C
+  .guiTempDenoise       = 0,                    // ±5°C
   .tempUnit             = mode_Celsius,
   .tempStep             = 5,                    // 5º steps
   .tempBigStep          = 20,                   // 20º big steps
@@ -51,10 +51,10 @@ const systemSettings_t defaultSystemSettings = {
   .initMode             = mode_sleep,           // Safer to boot in sleep mode by default!
   .buzzerMode           = disable,
   .buttonWakeMode       = wake_all,
-  .shakeWakeMode        = wake_all,
+  .shakeWakeMode        = wake_standby,
   .EncoderMode          = RE_Mode_Forward,
   .debugEnabled         = disable,
-  .language             = lang_english,
+  .language             = lang_tchinese,
 };
 
 #ifdef ENABLE_ADDONS
@@ -114,25 +114,25 @@ const profile_settings_t defaultProfileSettings = {
   .errorTimeout               = 500,                    // ms
   .errorResumeMode            = error_resume,
   .sleepTimeout               = (uint32_t)5*60000,      // ms
-  .standbyTimeout             = (uint32_t)5*60000,
-  .standbyTemperature         = 180,
+  .standbyTimeout             = (uint32_t)3*60000,
+  .standbyTemperature         = 150,
   .MaxSetTemperature          = 450,
-  .MinSetTemperature          = 180,
-  .boostTimeout               = 60000,                  // ms
+  .MinSetTemperature          = 100,
+  .boostTimeout               = 30000,                  // ms
   .boostTemperature           = 50,
-  .coldBoostEnabled           = true,
+  .coldBoostEnabled           = false,
   .coldBoostTimeout           = 10000,                  // ms
   .coldBoostTemperature       = 150,
   .pwmMul                     = 1,
-  .readPeriod                 = (200*200)-1,             // 200ms * 200  because timer period is 5us
-  .readDelay                  = (20*200)-1,              // 20ms (Also uses 5us clock)
+  .readPeriod                 = (100*200)-1,             // 200ms * 200  because timer period is 5us
+  .readDelay                  = (10*200)-1,              // 20ms (Also uses 5us clock)
   .tempUnit                   = mode_Celsius,
-  .shakeFiltering             = disable,
+  .shakeFiltering             = enable,
   .WakeInputMode              = mode_shake,
-  .smartActiveEnabled         = disable,
-  .smartActiveLoad            = 30,
-  .standDelay                 = 0,
-  .StandMode                  = mode_sleep,
+  .smartActiveEnabled         = enable,
+  .smartActiveLoad            = 50,
+  .standDelay                 = 2,
+  .StandMode                  = mode_standby,
   .version                    = PROFILE_SETTINGS_VERSION,
 };
 
@@ -151,10 +151,10 @@ const tipData_t defaultTipData[NUM_PROFILES] = {
   [profile_C245] = {
     .calADC_At_250   = C245_Cal250,
     .calADC_At_400   = C245_Cal400,
-    .PID.Kp          = 4500,           // val = /1.000.000
-    .PID.Ki          = 1500,           // val = /1.000.000
-    .PID.Kd          = 600,           // val = /1.000.000
-    .PID.maxI        = 70,             // val = /100
+    .PID.Kp          = 4000,           // val = /1.000.000
+    .PID.Ki          = 1000,           // val = /1.000.000
+    .PID.Kd          = 500,            // val = /1.000.000
+    .PID.maxI        = 65,             // val = /100
     .PID.minI        = 0,
     .name            = "C245-",
   },
@@ -174,6 +174,30 @@ const char * defaultTipName[NUM_PROFILES] = { "T12-BC3", "C245-963", "C210-018" 
 __attribute__((section(".globalSettings"))) flashSettings_t flashGlobalSettings;
 __attribute__((section(".tempSettings"))) temp_settings_t flashTempSettings;
 __attribute__((section(".tips"))) flashTipSlot_t flashTips[3];
+
+typedef struct {
+  uint8_t     profile;
+  char        tipname[9];
+  uint16_t    cal_250;
+  uint16_t    cal_400;
+  uint16_t    padding;
+} backup_data_t;
+
+typedef struct {
+  char             tipHead[12];
+  uint32_t         tipNums;
+  backup_data_t    tipData[63];
+} backup_tips_t;
+
+__attribute__((section(".backuptips"))) static backup_tips_t backup_tips = {
+  "#BACKUPTIPS#",
+  /*3,
+  {
+    { profile_T12, "T12-D24", T12_Cal250, T12_Cal400 },
+    { profile_C245, "C245-911", C245_Cal250, C245_Cal400 },
+    { profile_C210, "C210-003", C210_Cal250, C210_Cal400 },
+  }*/
+};
 
 settings_t settings;
 
@@ -327,6 +351,17 @@ static void resetflashTipData(flashTipData_t *tipData, uint8_t profile){
   strcpy(tipData->tip[0].name, defaultTipName[profile]);                                   // Load default tip name
   tipData->currentNumberOfTips = 1;                                                        // Set current tips to 1
   tipData->version = TIP_SETTINGS_VERSION;
+
+  for (int i = 0; backup_tips.tipNums <= 63 && i < backup_tips.tipNums; i++) {
+    backup_data_t* blk = &backup_tips.tipData[i];
+    if (blk->profile <= profile_C210 && blk->profile == profile) {
+      int x = tipData->currentNumberOfTips++;
+      tipData->tip[x] = defaultTipData[profile];
+      memcpy(tipData->tip[x].name, blk->tipname, strlen(blk->tipname));
+      tipData->tip[x].calADC_At_250 = blk->cal_250;
+      tipData->tip[x].calADC_At_400 = blk->cal_400;
+    }
+  }
 }
 
 void saveTip(uint8_t save_mode, uint8_t tip_index){
@@ -971,8 +1006,8 @@ static void resetProfileSettings(profile_settings_t * p, uint8_t profile){
 
   else if(profile==profile_C245){
       p->ID = profile_C245;
-      p->impedance                = 26;
-      p->power                    = 150;
+      p->impedance                = 30;
+      p->power                    = 130;
       p->noIronValue              = 4000;
       p->Cal250_default           = C245_Cal250;
       p->Cal400_default           = C245_Cal400;
