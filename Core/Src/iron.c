@@ -123,6 +123,7 @@ void ironInit(TIM_HandleTypeDef *delaytimer, TIM_HandleTypeDef *pwmtimer, uint32
 
 void handleIron(void) {
   static uint32_t reachedTime = 0;
+  static uint8_t coldBoost_reached = 0;
   CurrentTime = HAL_GetTick();
   if(!Iron.Error.safeMode){
     if( (getSettings()->setupMode==enable) || getSystemSettings()->version!=SYSTEM_SETTINGS_VERSION || getProfileSettings()->version!=PROFILE_SETTINGS_VERSION ||
@@ -184,7 +185,8 @@ void handleIron(void) {
       }
 
     }
-    if((Iron.CurrentMode==mode_coldboost) && (mode_time>getProfileSettings()->coldBoostTimeout)){                              // If cold boost mode and time expired
+    if((Iron.CurrentMode==mode_coldboost) && coldBoost_reached){                              // If cold boost mode and time expired
+      coldBoost_reached = 0;
       setCurrentMode(mode_run, MLONG_BEEP);
     }
     else if((Iron.CurrentMode==mode_boost) && (mode_time>getProfileSettings()->boostTimeout)){    // If boost mode and time expired
@@ -265,6 +267,9 @@ void handleIron(void) {
         temperatureReached( Iron.TargetTemperature);
       }
     }
+  }
+  else if (Iron.CurrentMode == mode_coldboost && Iron.temperatureReached) {
+    coldBoost_reached = 1;
   }
   else{
     reachedTime = 0;

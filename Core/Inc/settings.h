@@ -13,27 +13,20 @@
 #include "board.h"
 
 #define ENABLE_DBG_SAVE
-#define SWSTRING                  "SW: 1.13.12    "                 // Software version reported in settings screen
+#define SWSTRING                  "SW: 1.13.12 Mod"                 // Software version reported in settings screen
 #define SYSTEM_SETTINGS_VERSION   29                                // Change this if you change the system settings struct to prevent getting out of sync
 #define PROFILE_SETTINGS_VERSION  4                                 // Same, but for profile settings struct
 #define TIP_SETTINGS_VERSION      1                                 // Same, but for tip settings struct
 #define ADDONS_SETTINGS_VERSION   1                                 // Same, but for addons settings struct
 
-#define LANGUAGE_COUNT_WITH_CHINESE    9                            // Number of languages including chinese variations
-
-#ifdef DISABLE_CHINESE
-#define LANGUAGE_COUNT    (LANGUAGE_COUNT_WITH_CHINESE - 2)
-#else
-#define LANGUAGE_COUNT    (LANGUAGE_COUNT_WITH_CHINESE)
-#endif
-
+#define LANGUAGE_COUNT    2                                         // Number of languages
 #define NUM_PROFILES      3                                         // Number of profiles
 #define NUM_TIPS          85                                        // Number of tips for each profile
 #define TIP_LEN           8                                         // String size for each tip name (Including null termination)
 #define _BLANK_TIP        "        "                                // Empty tip name, containing (TIP_LEN) spaces. Defined here for quick updating if TIP_LEN is modified.
 
 #define TEMPSETTINGS_SAVE_TIME  3000                                // Last tip/profile/temperature in flash are updated after 3 seconds with no changes. This is not applied when battery option is enabled (Stored instantly).
-#define DEFAULT_TEMPERATURE     320                                 // Temperature loaded by default
+#define DEFAULT_TEMPERATURE     300                                 // Temperature loaded by default
 #ifndef PROFILE_VALUES
 
 #define T12_Cal250        1100                                      // Default values to be used in the calibration if not adjusted
@@ -52,16 +45,7 @@
 
 typedef enum{
   lang_english,
-  lang_russian,
-  lang_swedish,
-  lang_german,
-  lang_turkish,
-  lang_bulgarian,
-  lang_czech,
-#ifndef DISABLE_CHINESE
-  lang_schinese,
   lang_tchinese,
-#endif
 }languages_t;
 
 typedef enum{
