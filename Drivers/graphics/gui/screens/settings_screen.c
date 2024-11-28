@@ -27,7 +27,7 @@ static void SETTINGS_create(screen_t *scr) {
   //
   newWidget(&w,widget_combo,scr, NULL);
 
-  newComboScreen(w, StringProfile, screen_iron, NULL);
+  newComboScreen(w, strings[lang].settings_IRON, screen_iron, NULL);
   newComboScreen(w, strings[lang].settings_SYSTEM, screen_system, NULL);
   #ifdef ENABLE_DEBUG_SCREEN
   newComboScreen(w, strings[lang].settings_DEBUG, screen_debug, &comboitem_system_debug);

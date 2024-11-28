@@ -1257,16 +1257,28 @@ int default_widgetProcessInput(widget_t *w, RE_Rotation_t input, RE_State_t *sta
           case ' '-1:
             current_edit ='Z';
             break;
-          case '!':
-            current_edit ='-';
+          case ' '+1:
+            current_edit ='*';
             break;
-          case ',':
+          case '*'-1:
             current_edit =' ';
             break;
-          case ':':
+          case '*'+1:
+            current_edit ='-';
+            break;
+          case '-'-1:
+            current_edit ='*';
+            break;
+          case '-'+1:
+            current_edit ='0';
+            break;
+          case '0'-1:
+            current_edit ='-';
+            break;
+          case '9'+1:
             current_edit ='A';
             break;
-          case '@':
+          case 'A'-1:
             current_edit ='9';
             break;
           case 'Z'+1:

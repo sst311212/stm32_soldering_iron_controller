@@ -25,18 +25,26 @@ void setupPID(pid_values_t* p) {
 int32_t calculatePID(int32_t setpoint, int32_t measurement, int32_t base) {
   float dt = (float)(HAL_GetTick() - pid.lastTime)/1000;
   float error = setpoint - measurement;
-  pid.proportional = pid.Kp * error;                                          // Proportional term
+
+  float diff = abs(adc2Human_x10(setpoint, 0, mode_Celsius) -
+		  adc2Human_x10(measurement, 0, mode_Celsius)) / 10.0;
+  float disP = (error > 0 && diff > 30) ? 1.6 : 1;
+  float disI = (diff > 30) ? 0 : 1;
+  if (error < 0 && diff > 5)
+    pid.integrator /= 2;
+
+  pid.proportional = pid.Kp * error * disP;                                     // Proportional term
 #if defined PID_RESET_CYCLES && PID_RESET_CYCLES>0
-  if(pid.reset && ++pid.reset>(PID_RESET_CYCLES-1))                               // If pid resetted, only use proportional for few cycles to avoid spikes
+  if(pid.reset && ++pid.reset>(PID_RESET_CYCLES-1))                             // If pid resetted, only use proportional for few cycles to avoid spikes
       pid.reset = 0;
   if(!pid.reset){                                                               // Normal PID calculation
 #endif
-    pid.integrator = pid.integrator + (pid.Ki*(error*dt));                      // Integral
+    pid.integrator += pid.Ki * (error * dt) * disI;                             // Integral
     if (pid.integrator > pid.limMaxInt)                                         // Integrator clamping
       pid.integrator = pid.limMaxInt;
     else if (pid.integrator < pid.limMinInt)
       pid.integrator = pid.limMinInt;
-    pid.derivative = pid.Kd*((error-pid.prevError)/dt);
+    pid.derivative = pid.Kd * ((error - pid.prevError) / dt);
     pid.out = pid.proportional + pid.integrator + pid.derivative;               // Compute output
 #if defined PID_RESET_CYCLES && PID_RESET_CYCLES>0
   }
@@ -44,9 +52,9 @@ int32_t calculatePID(int32_t setpoint, int32_t measurement, int32_t base) {
     pid.out = pid.proportional;                                                 // Reset PID mode, only proportional
 #endif
   if(pid.out > pid.limMax)                                                      // Apply limits
-      pid.out = pid.limMax;
+    pid.out = pid.limMax;
   else if (pid.out < pid.limMin)
-      pid.out = pid.limMin;
+    pid.out = pid.limMin;
   pid.prevMeasurement = measurement;                                            // Store data for later use
   pid.lastTime = HAL_GetTick();
   pid.prevError = error;
