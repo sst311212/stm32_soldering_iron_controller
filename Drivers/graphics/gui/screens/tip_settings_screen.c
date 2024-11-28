@@ -18,6 +18,7 @@ static comboBox_item_t *comboitem_tip_settings_save;
 static comboBox_item_t *comboitem_tip_settings_copy;
 static comboBox_item_t *comboitem_tip_settings_new;
 static comboBox_item_t *comboitem_tip_settings_delete;
+static comboBox_item_t *comboitem_tip_settings_padding;
 static editable_widget_t *editable_tip_settings_name;
 static editable_widget_t *editable_tip_settings_cal250;
 static editable_widget_t *editable_tip_settings_cal400;
@@ -132,11 +133,16 @@ static int tip_delete(widget_t *w, RE_Rotation_t input) {
 }
 //=========================================================
 static int tip_copy(widget_t *w, RE_Rotation_t input) {                                                         // Keep existing name
+  int i = 0;
+  while (i < TIP_LEN && backupTip.name[i] != ' ') { i++; }
+  backupTip.name[(i < TIP_LEN ? i : TIP_LEN - 1)] = '*';
+
   Selected_Tip = getCurrentNumberOfTips();                                                     // Select next available slot
   comboitem_tip_settings_save->enabled=0;                                                                       // Disable save, will be enabled when the name is modified (If not matching any other tip)
   comboitem_tip_settings_new->enabled=0;                                                                        // Cannot copy a new tip
   comboitem_tip_settings_copy->enabled=0;                                                                       // Cannot copy a new tip
   comboitem_tip_settings_delete->enabled=0;                                                                     // Cannot delete a new tip
+  comboitem_tip_settings_padding->enabled=0;
   comboResetIndex(Screen_tip_settings.current_widget);                                                          // Reset menu to 1st option
   return -1;                                                                                                    //
 }
@@ -233,6 +239,7 @@ static void tip_settings_onEnter(screen_t *scr){
     comboitem_tip_settings_copy->enabled=0;                                                                     // Cannot copy a new tip
     comboitem_tip_settings_new->enabled=0;                                                                      // Already a new tip
     comboitem_tip_settings_delete->enabled=0;                                                                   // Cannot delete a new tip
+    comboitem_tip_settings_padding->enabled=0;
   }
   else{                                                                                                         // Existing tip
     if(scr != &Screen_tip_list)                                                                                 // If coming from tip list screen, Selected_Tip is already set.
@@ -242,6 +249,7 @@ static void tip_settings_onEnter(screen_t *scr){
     comboitem_tip_settings_delete->enabled = (getCurrentNumberOfTips()>1);                     // If more than 1 tip in the system, enable delete
     comboitem_tip_settings_copy->enabled = (getCurrentNumberOfTips()<NUM_TIPS);                // If tip slots available, enable copy button
     comboitem_tip_settings_new->enabled = comboitem_tip_settings_copy->enabled;
+    comboitem_tip_settings_padding->enabled=1;
   }
   Flash_to_Edit(backupTip.name);                                                                                // Convert name to editable format
 }
@@ -360,12 +368,13 @@ static void tip_settings_create(screen_t *scr){
   edit->step = 1;
   edit->setData = (setterFn)&setCal400;
 
-  newComboAction(w, strings[lang]._RESET, &tip_reset, NULL);
   newComboAction(w, strings[lang]._ADD_NEW, &tip_new, &comboitem_tip_settings_new);
   newComboAction(w, strings[lang].TIP_SETTINGS_COPY, &tip_copy, &comboitem_tip_settings_copy);
-  newComboAction(w, strings[lang].TIP_SETTINGS_DELETE, &tip_delete, &comboitem_tip_settings_delete);
   newComboAction(w, strings[lang]._SAVE, &tip_save, &comboitem_tip_settings_save);
   newComboScreen(w, strings[lang]._CANCEL, last_scr, NULL);
+  newComboScreen(w, "---------------", -1, &comboitem_tip_settings_padding);
+  newComboAction(w, strings[lang]._RESET, &tip_reset, NULL);
+  newComboAction(w, strings[lang].TIP_SETTINGS_DELETE, &tip_delete, &comboitem_tip_settings_delete);
 }
 
 
